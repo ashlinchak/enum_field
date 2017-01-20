@@ -9,12 +9,12 @@ module EnumField
       @sorted = []
     end
 
-    def member(name, options = {})
+    def member(name, is_freeze = true, options = {})
       obj, candidate_id = process_options(options)
       assign_id(obj, candidate_id)
       define_in_meta(name) { obj }
       save(name, obj)
-      obj.freeze
+      obj.freeze if is_freeze
     end
 
     def all
