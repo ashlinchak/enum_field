@@ -1,20 +1,25 @@
 # encoding: utf-8
 module EnumField
   class Builder
+    ENABLED_OPTIONS = [:object, :id, :is_freeze].freeze
+
     def initialize(target)
       @target = target
       @next_id = 0
       @id2obj = {}
       @name2obj = {}
       @sorted = []
+      @default_options = { is_freeze: true }
     end
 
-    def member(name, is_freeze = true, options = {})
+    def member(name, options = {})
+      options = @default_options.merge(options)
       obj, candidate_id = process_options(options)
       assign_id(obj, candidate_id)
+      assign_name(obj, name)
       define_in_meta(name) { obj }
       save(name, obj)
-      obj.freeze if is_freeze
+      obj.freeze if options[:is_freeze] == true
     end
 
     def all
@@ -48,6 +53,10 @@ module EnumField
       obj.instance_variable_set(:@id, id)
     end
 
+    def assign_name(obj, name)
+      obj.instance_variable_set(:@name, name)
+    end
+
     def new_id(candidate)
       validate_candidate_id(candidate)
       candidate || find_next_id
@@ -64,7 +73,7 @@ module EnumField
     end
 
     def process_options(options)
-      raise EnumField::InvalidOptions unless options.reject {|k,v| k == :object || k == :id}.empty?
+      raise EnumField::InvalidOptions if (options.keys - ENABLED_OPTIONS).any?
       [options[:object] || @target.new, options[:id]]
     end
 
